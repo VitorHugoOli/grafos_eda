@@ -14,7 +14,7 @@ class GrafoLstAdj(Grafo):
         self.grafo[u].append(v)
         self.grafo[v].append(u)
 
-    def arestas(self):
+    def arestas(self): # Usado para o copy
         arestas = set()
         for u in range(self.num_v):
             for v in self.grafo[u]:
@@ -23,10 +23,21 @@ class GrafoLstAdj(Grafo):
         return arestas
 
     def remove_vertice(self, u):
+        # Remove the vertex u from the adjacency lists of other vertices
         for v in range(self.num_v):
             if u in self.grafo[v]:
                 self.grafo[v].remove(u)
+
+        # Adjust the vertex indices for all vertices with a higher index than u
+        for v in range(u + 1, self.num_v):
+            for w in range(self.num_v):
+                if v in self.grafo[w]:
+                    self.grafo[w].remove(v)
+                    self.grafo[w].append(v - 1)
+
+        # Remove the vertex u from the graph and update the number of vertices
         self.grafo.pop(u)
+        self.num_v -= 1
 
     def remove_aresta(self, u, v):
         self.grafo[u].remove(v)
@@ -44,5 +55,3 @@ class GrafoLstAdj(Grafo):
     def tem_alguma_aresta(self, u):
         return len(self.grafo[u]) > 0
 
-    def eh_nulo(self):
-        return self.num_v == 0

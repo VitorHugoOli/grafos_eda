@@ -1,14 +1,57 @@
 from collections import deque
+from copy import copy, deepcopy
+from itertools import chain, combinations
 
 import graphviz
 
 
-class GrafoDisplayMixin:
+class GrafoBase:
+    def __init__(self, num_v=0):
+        # Será usada para inicializar a estrutura de dados e inicializar a variável num_v(número de vértices)
+        self.num_v = num_v
+        pass
+
+    def add_vertice(self):
+        # Adiciona um vértice ao grafo
+        pass
+
+    def add_aresta(self, u, v):
+        # Adiciona uma aresta entre os vértices u e v
+        pass
+
+    def arestas(self) -> list[tuple]:
+        # Retorna uma lista de tuplas (u, v) que representam as arestas do grafo
+        pass
+
     def vertices(self) -> list:
         pass
 
-    def arestas(self) -> list:
+    def remove_aresta(self, u, v):
+        # Remove a aresta entre os vértices u e v
         pass
+
+    def remove_vertice(self, u):
+        # Remove o vértice u do grafo
+        pass
+
+    def adjs(self, u) -> list[int]:
+        # Retorna uma lista com os vértices adjacentes a u
+        pass
+
+    def ha_aresta(self, u, v):
+        # O vértice u tem uma aresta com o vértice v?
+        pass
+
+    def grau(self, u) -> int:
+        # O grau de um vértice é o número de arestas que incidem nele
+        pass
+
+    def tem_alguma_aresta(self, u):
+        # O vértice tem alguma aresta?
+        pass
+
+
+class GrafoDisplayMixin(GrafoBase):
 
     def __str__(self):
         # Create a string representation of the graph
@@ -48,45 +91,7 @@ class GrafoDisplayMixin:
         dot.view(filename=folder + '/' + filename)
 
 
-class Grafo(GrafoDisplayMixin):
-    def __init__(self, num_v=0):
-        self.num_v = num_v
-        pass
-
-    def add_vertice(self):
-        pass
-
-    def add_aresta(self, u, v):
-        pass
-
-    def arestas(self) -> list[tuple]:
-        pass
-
-    def remove_aresta(self, u, v):
-        pass
-
-    def remove_vertice(self, u):
-        pass
-
-    def adjs(self, u) -> list[int]:
-        pass
-
-    def ha_aresta(self, u, v):
-        pass
-
-    def grau(self, u) -> int:
-        pass
-
-    def tem_alguma_aresta(self, u):
-        pass
-
-    def eh_nulo(self):
-        pass
-
-    '''
-    Métodos própios
-    '''
-
+class GrafoReadFileMixin(GrafoBase):
     @classmethod
     def read_graph(cls, file_name):
         with open(file_name, 'r') as f:
@@ -103,11 +108,13 @@ class Grafo(GrafoDisplayMixin):
                         graph_instance.add_aresta(i, int(j))
         return graph_instance
 
+
+class GrafoProrio(GrafoDisplayMixin, GrafoReadFileMixin):
+    def __init__(self, num_v=0):
+        super().__init__(num_v=num_v)
+
     def vertices(self):
         return [v for v in range(self.num_v)]
-
-    def eh_trivial(self):
-        return self.num_v == 1
 
     def bp(self, v, visited):
         visited[v] = True
@@ -135,6 +142,16 @@ class Grafo(GrafoDisplayMixin):
                 return False
         return True
 
+    @classmethod
+    def __copy__(cls, self):
+        new_graph = cls(num_v=self.num_v)
+        # for u, v in self.arestas():
+        #     new_graph.add_aresta(u, v)
+        new_graph.grafo = deepcopy(self.grafo)
+        return new_graph
+
+
+class GrafoEulerianoPathMixin(GrafoProrio):
     def eh_euleriano(self):
         if not self.eh_conectado():
             return False
@@ -155,46 +172,9 @@ class Grafo(GrafoDisplayMixin):
         if not self.eh_euleriano():
             return circuit
 
-        visited = [False] * self.num_v
-        visited[0] = True
-        stack: list = [0]
-        current_vertex = 0
-        count = 0
-
-        arestas = self.arestas()
-
-        while len(stack) > 0:
-            count += 1
-
-            adjs = self.adjs(current_vertex)
-
-            if len(adjs) > 0:
-                neighbor = adjs[-1]
-                self.remove_aresta(current_vertex, neighbor)
-                current_vertex = neighbor
-            else:
-                circuit.append(current_vertex)
-                current_vertex = stack.pop()
-
-            if not visited[current_vertex]:
-                visited[current_vertex] = True
-                stack.append(current_vertex)
-
-        print(f"arestas: {len(arestas)}, count: {count}")
-        circuit.reverse()
-        return circuit
-
-    def circuito_euleriano_new(self):
-        circuit = []
-
-        if not self.eh_euleriano():
-            return circuit
-
         stack: deque = deque()
         stack.append(0)
         count = 0
-
-        arestas = self.arestas()
 
         while len(stack) > 0:
             count += 1
@@ -210,6 +190,71 @@ class Grafo(GrafoDisplayMixin):
             else:
                 circuit.append(stack.pop())
 
-        print(f"arestas: {len(arestas)}, vertices: {self.num_v}, count: {len(arestas) + self.num_v} - {count}")
         circuit.reverse()
         return circuit
+
+
+class GrafoHamiltonianoMixin(GrafoProrio):
+    @staticmethod
+    def todos_subconjuntos(s):
+        """
+        Gera todos os subconjuntos próprios não vazios de S.
+
+        Parâmetros:
+        S (set): Um conjunto de vértices.
+
+        Retorna:
+        list: uma lista contendo todos os subconjuntos próprios não vazios de S.
+        """
+        return list(chain.from_iterable(combinations(s, r) for r in range(1, len(s))))
+
+    def num_componentes_conexas_apos_remocao(self, vertices_to_remove):
+        """
+        Calcula o número de componentes conexas após a remoção de um conjunto de vértices.
+
+        Parâmetros:
+        G (Grafo): Um grafo representado usando a classe Grafo.
+        vertices_to_remove (set): Um conjunto de vértices para remover do grafo G.
+
+        Retorna:
+        int: O número de componentes conexas após a remoção dos vértices.
+        """
+        H: GrafoProrio = self.__copy__(self)
+
+        # H = G − S
+        count = 0
+        for v in vertices_to_remove:
+            i = v - count
+            H.remove_vertice(i)
+            count += 1
+
+        visited = [False] * H.num_v
+        num_components = 0
+
+        # ω(H)
+        for v in range(H.num_v):
+            if not visited[v]:
+                num_components += 1
+                H.bp(v, visited)
+
+        return num_components
+
+    def eh_hamiltoniano(self):
+        """
+        Verifica se a condição necessária para um grafo ser Hamiltoniano é satisfeita.
+
+        Retorna:
+        bool: Retorna True se a condição for satisfeita, caso contrário retorna False.
+        """
+
+        V = set(self.vertices())  # qualquer subconjunto próprio não vazio S ⊂ V
+
+        for S in self.todos_subconjuntos(V):
+            if self.num_componentes_conexas_apos_remocao(S) > len(S):  # vale a relação ω(G − S) ≤ |S|
+                return False
+
+        return True
+
+
+class Grafo(GrafoEulerianoPathMixin, GrafoHamiltonianoMixin):
+    pass

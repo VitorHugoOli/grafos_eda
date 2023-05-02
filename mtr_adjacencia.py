@@ -48,9 +48,3 @@ class GrafoMtrAdj(Grafo):
         for i in self.grafo[u]:
             if i > 0:
                 return True
-
-    def eh_nulo(self):
-        for i in range(self.num_v):
-            if len(self.adjs(i)) > 0:
-                return False
-        return True

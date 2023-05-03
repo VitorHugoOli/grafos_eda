@@ -1,7 +1,10 @@
+from analysis import Analysis as analysis
+from analysis import Analysis
 from grafo import Grafo
 
 
 class GrafoMtrInc(Grafo):
+
     def __init__(self, num_v=0):
         super().__init__(num_v=num_v)
         self.grafo: list[list[int]] = [[] for _ in range(num_v)]
@@ -33,6 +36,7 @@ class GrafoMtrInc(Grafo):
         incident_edges = [i for i, value in enumerate(self.grafo[u]) if value > 0]
         for edge_index in reversed(incident_edges):
             for i in range(self.num_v):
+                analysis.COUNTER += 1 + len(self.grafo[i])
                 self.grafo[i].pop(edge_index)
             self.num_a -= 1
         self.grafo.pop(u)
@@ -46,6 +50,7 @@ class GrafoMtrInc(Grafo):
                 break
         if edge_index is not None:
             for i in range(self.num_v):
+                analysis.COUNTER += 1 + len(self.grafo[i])
                 self.grafo[i].pop(edge_index)
             self.num_a -= 1
 
@@ -54,23 +59,24 @@ class GrafoMtrInc(Grafo):
         for i, value in enumerate(self.grafo[u]):
             if value > 0:
                 for j in range(self.num_v):
+                    Analysis.COUNTER += 1
                     if j != u and self.grafo[j][i] > 0:
                         adjacents.append(j)
         return adjacents
 
     def ha_aresta(self, u, v):
         for i in range(self.num_a):
+            analysis.COUNTER += 1
             if self.grafo[u][i] > 0 and self.grafo[v][i] > 0:
                 return True
         return False
 
     def grau(self, u):
+        analysis.COUNTER += self.num_a
         return sum(self.grafo[u])
 
     def tem_alguma_aresta(self, u):
         for i in range(self.num_a):
+            analysis.COUNTER += 1
             if self.grafo[u][i] > 0:
                 return True
-
-    def eh_nulo(self):
-        return self.num_v == 0

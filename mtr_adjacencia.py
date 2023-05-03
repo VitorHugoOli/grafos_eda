@@ -1,5 +1,6 @@
 import graphviz
 
+from analysis import Analysis as analysis
 from grafo import Grafo
 
 
@@ -32,19 +33,23 @@ class GrafoMtrAdj(Grafo):
         self.num_v -= 1
 
     def remove_aresta(self, u, v):
+        analysis.COUNTER += 1
         self.grafo[u][v] -= self.grafo[u][v]
         self.grafo[v][u] -= self.grafo[v][u]
 
     def adjs(self, u):  # O(V)
+        analysis.COUNTER += self.num_v
         return [v for v in range(self.num_v) if self.grafo[u][v] > 0]
 
     def ha_aresta(self, u, v):
         return self.grafo[u][v] > 0
 
     def grau(self, u):
+        analysis.COUNTER += self.num_v
         return sum(self.grafo[u])
 
     def tem_alguma_aresta(self, u):  # O(V)
         for i in self.grafo[u]:
+            analysis.COUNTER += 1
             if i > 0:
                 return True

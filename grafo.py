@@ -4,6 +4,9 @@ from itertools import chain, combinations
 
 import graphviz
 
+from analysis import Analysis as analysis
+
+
 
 class GrafoBase:
     def __init__(self, num_v=0):
@@ -148,6 +151,7 @@ class GrafoProrio(GrafoDisplayMixin, GrafoReadFileMixin):
         # for u, v in self.arestas():
         #     new_graph.add_aresta(u, v)
         new_graph.grafo = deepcopy(self.grafo)
+        analysis.COUNTER += len(self.grafo) + len(self.arestas())
         return new_graph
 
 

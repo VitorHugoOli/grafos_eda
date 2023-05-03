@@ -33,7 +33,7 @@ def graph_to_file(m):
 
 
 if __name__ == '__main__':
-    for i in range(5, 55, 5):
+    for i in range(3, 15, 3):
         m = create_eulerian_graph(i)
         graph_to_file(m)
     # nodes = 5

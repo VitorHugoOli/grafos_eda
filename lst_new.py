@@ -1,13 +1,14 @@
-from grafo import Grafo
+from grafo import Grafo, GrafoProrio
 
 
 class GrafoLstAdjNew(Grafo):
     def __init__(self, num_v=0):
         super().__init__(num_v=num_v)
+        self.grafo_shadow = None
         self.grafo: dict[int, list[int]] = {i: [] for i in range(num_v)}
 
-    def add_vertice(self):
-        self.grafo[self.num_v] = []
+    def add_vertice(self, u):
+        self.grafo[u] = []
         self.num_v += 1
 
     def add_aresta(self, u, v):
@@ -47,3 +48,57 @@ class GrafoLstAdjNew(Grafo):
 
     def eh_nulo(self):
         return self.num_v == 0
+
+    def num_componentes_conexas_apos_remocao(self, vertices_to_remove):
+        """
+        Calcula o número de componentes conexas após a remoção de um conjunto de vértices.
+
+        Parâmetros:
+        G (Grafo): Um grafo representado usando a classe Grafo.
+        vertices_to_remove (set): Um conjunto de vértices para remover do grafo G.
+
+        Retorna:
+        int: O número de componentes conexas após a remoção dos vértices.
+        """
+        # H: GrafoProrio = self.__copy__(self)
+
+        # H = G − S
+        visited = [False] * self.grafo_shadow.num_v
+        num = self.grafo_shadow.num_v
+        for v in vertices_to_remove:
+            self.grafo_shadow.remove_vertice(v)
+            visited[v] = True
+
+        num_components = 0
+
+        # ω(H)
+        for v in range(num):
+            if not visited[v]:
+                num_components += 1
+                self.grafo_shadow.bp(v, visited)
+
+        for v in vertices_to_remove:
+            self.grafo_shadow.add_vertice(v)
+
+        for v in vertices_to_remove:
+            for i in self.adjs(v):
+                self.grafo_shadow.add_aresta(v, i)
+
+        return num_components
+
+    def eh_hamiltoniano(self):
+        """
+        Verifica se a condição necessária para um grafo ser Hamiltoniano é satisfeita.
+
+        Retorna:
+        bool: Retorna True se a condição for satisfeita, caso contrário retorna False.
+        """
+        self.grafo_shadow = self.__copy__(self)
+
+        V = set(self.vertices())  # qualquer subconjunto próprio não vazio S ⊂ V
+
+        for S in self.todos_subconjuntos(V):
+            if self.num_componentes_conexas_apos_remocao(S) > len(S):  # vale a relação ω(G − S) ≤ |S|
+                return False
+
+        return True
